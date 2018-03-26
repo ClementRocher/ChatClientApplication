@@ -1,8 +1,6 @@
 ﻿using System;
-using System.IO;
-using System.Net;
-using System.Net.Http;
 using System.Net.Sockets;
+using System.Text;
 using System.Threading;
 
 namespace ChatClientApplication
@@ -20,19 +18,24 @@ namespace ChatClientApplication
         {
             try 
             {
-
                 // Initialization (Create and connect)
                 TcpClient client = new TcpClient("127.0.0.1", 4200);
+                
+                // New thread for printing new messages
                 NetworkStream stream = client.GetStream();
-                new Thread((o) => { Reading(stream,client); });
+                new Thread((o) =>
+                {
+                    Reading(client);
+                }).Start();
+                
                 String message = "";
                 
-                while(client.Available>0 || message.Equals("/exit"))
+                while(client.Connected || message.Equals("/exit"))
                 {
                     // Send operation
                     
                     message = Console.ReadLine();
-                    Byte[] data = System.Text.Encoding.ASCII.GetBytes(message);
+                    Byte[] data = Encoding.ASCII.GetBytes(message);
                     stream.Write(data, 0, data.Length);
                    
                 }
@@ -53,17 +56,17 @@ namespace ChatClientApplication
     
         }
 
-        private void Reading(NetworkStream stream,TcpClient client)
+        private void Reading(TcpClient client)
         {
-            while(client.Available>0)
+            while(client.Connected)
             {
+                NetworkStream stream = client.GetStream();
                 Byte[] data = new Byte[256];
                 String responseData = String.Empty;
-                Int32 bytes = stream.Read(data, 0, data.Length);
-                responseData = System.Text.Encoding.ASCII.GetString(data, 0, bytes);
+                stream.Read(data, 0, data.Length);
+                responseData = Encoding.UTF8.GetString(data);
                 Console.WriteLine("Received : " + responseData);
             }
         }
-
     }
 }
