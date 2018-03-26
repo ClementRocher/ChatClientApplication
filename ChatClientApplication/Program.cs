@@ -7,9 +7,11 @@ namespace ChatClientApplication
 {
     class Program
     {
+
+        private Boolean isConnected = true;
+            
         static void Main(string[] args)
         {
-            String message;
             new Program().Connect();
         }
 
@@ -19,31 +21,35 @@ namespace ChatClientApplication
             try 
             {
                 // Initialization (Create and connect)
-                TcpClient client = new TcpClient("127.0.0.1", 4200);
+                TcpClient client = new TcpClient("192.168.43.197", 4200);
                 
                 // New thread for printing new messages
                 NetworkStream stream = client.GetStream();
-                new Thread((o) =>
+                Thread t = new Thread((o) =>
                 {
                     Reading(client);
-                }).Start();
+                });
+                t.Start();
                 
                 String message = "";
-                
-                while(client.Connected || message.Equals("/exit"))
+
+                do
                 {
                     // Send operation
-                    
+
                     message = Console.ReadLine();
                     Byte[] data = Encoding.ASCII.GetBytes(message);
                     stream.Write(data, 0, data.Length);
-                   
-                }
-                
-               
+                    data = new Byte[256];
+
+                } while (client.Connected && !message.Equals("/exit"));
+
+                isConnected = false;
                 // It’s done !
                 stream.Close();
-                client.Close();      
+                client.Close();
+               
+               
             } 
             catch (ArgumentNullException e) 
             {
@@ -58,14 +64,26 @@ namespace ChatClientApplication
 
         private void Reading(TcpClient client)
         {
-            while(client.Connected)
+            while(client.Connected && isConnected)
             {
-                NetworkStream stream = client.GetStream();
-                Byte[] data = new Byte[256];
-                String responseData = String.Empty;
-                stream.Read(data, 0, data.Length);
-                responseData = Encoding.UTF8.GetString(data);
-                Console.WriteLine("Received : " + responseData);
+                try
+                {
+                    NetworkStream stream = client.GetStream();
+                    Byte[] data = new Byte[256];
+                    String responseData = String.Empty;
+                    stream.Read(data, 0, data.Length);
+                
+                    responseData = Encoding.UTF8.GetString(data);
+
+                    Console.WriteLine("Received : " + responseData);
+
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("bye");
+                }
+                
+
             }
         }
     }
