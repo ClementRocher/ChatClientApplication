@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
@@ -21,6 +22,7 @@ namespace ChatClientApplication
         {
             try 
             {
+
                 // Initialization (Create and connect)
                 TcpClient client = new TcpClient("127.0.0.1", 4200);
                 NetworkStream stream = client.GetStream();
@@ -36,6 +38,7 @@ namespace ChatClientApplication
                 // It’s done !
                 stream.Close();
                 client.Close();      
+
             } 
             catch (ArgumentNullException e) 
             {
